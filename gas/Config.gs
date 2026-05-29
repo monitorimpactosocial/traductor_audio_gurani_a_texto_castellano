@@ -1,6 +1,8 @@
 var UNC = {
   APP_NAME: 'UNC_TRADUCTOR_GUARANI',
   DEFAULT_VERSION: '0.1.0-piloto',
+  PILOT_SPREADSHEET_ID: '1x7uBb_rsj29yjt2mQOiKPHKFiE8Cr0JrheWHxAEl32c',
+  PILOT_DRIVE_FOLDER_ID: '1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC',
   ROLES: ['admin', 'supervisor', 'linguista', 'cargador', 'viewer'],
   PERMISSIONS: {
     admin: ['capture', 'review', 'dashboard', 'admin', 'exports', 'logs', 'translate'],
@@ -40,13 +42,13 @@ function getAppVersion() {
 }
 
 function getSpreadsheet_() {
-  var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID') || UNC.PILOT_SPREADSHEET_ID;
   if (!id) throw new Error('Falta Script Property SPREADSHEET_ID');
   return SpreadsheetApp.openById(id);
 }
 
 function getDriveFolder_() {
-  var id = PropertiesService.getScriptProperties().getProperty('DRIVE_FOLDER_ID');
+  var id = PropertiesService.getScriptProperties().getProperty('DRIVE_FOLDER_ID') || UNC.PILOT_DRIVE_FOLDER_ID;
   if (!id) throw new Error('Falta Script Property DRIVE_FOLDER_ID');
   return DriveApp.getFolderById(id);
 }

@@ -4,7 +4,7 @@ window.UNC_CONFIG = {
   environment: "desarrollo",
   consentVersion: "CONS-UNC-GN-2026-05-29-v1",
   backendMode: "demo",
-  gasWebAppUrl: "",
+  gasWebAppUrl: "https://script.google.com/macros/s/AKfycbwHed3yKFi85-mO38zeXAIql4FqU1wUkiC8uGPjPPRj8oDi_f-9OmBSmLeWdW-Ucbglww/exec",
   uncApiBaseUrl: "",
   sheetId: "1x7uBb_rsj29yjt2mQOiKPHKFiE8Cr0JrheWHxAEl32c",
   driveFolderId: "1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC",

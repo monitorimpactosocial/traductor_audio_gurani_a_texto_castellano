@@ -29,6 +29,14 @@ Envia acciones a Google Apps Script:
 
 Los audios se envian como base64 en la solicitud para que Apps Script cree un archivo en Drive. La base64 no se guarda en Sheets.
 
+URL Web App del piloto:
+
+```text
+https://script.google.com/macros/s/AKfycbwHed3yKFi85-mO38zeXAIql4FqU1wUkiC8uGPjPPRj8oDi_f-9OmBSmLeWdW-Ucbglww/exec
+```
+
+Si devuelve `403 Acceso denegado`, abrir el proyecto Apps Script con la cuenta propietaria, ejecutar una funcion una vez para autorizar scopes, y redeployar el Web App con acceso `Anyone, even anonymous`.
+
 ### `unc-api`
 
 Reservado para la API institucional UNC. Debe exponer endpoints para traduccion, correcciones, audios, prompts y tareas priorizadas.

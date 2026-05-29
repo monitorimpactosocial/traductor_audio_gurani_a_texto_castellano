@@ -31,3 +31,12 @@ gasWebAppUrl: "https://script.google.com/macros/s/XXXXX/exec"
 ```
 
 Sin la URL del Web App, el frontend queda en modo demo local aunque ya conozca el Sheet y la carpeta Drive.
+
+## Despliegue creado para este piloto
+
+```text
+Script ID: 1OL6P2-Euww7FWBGNQmHsOqaOPFe2wEqhclhbvvQA88yb-FzmLspcCYdS
+Web App: https://script.google.com/macros/s/AKfycbwHed3yKFi85-mO38zeXAIql4FqU1wUkiC8uGPjPPRj8oDi_f-9OmBSmLeWdW-Ucbglww/exec
+```
+
+El Web App fue creado con `ANYONE_ANONYMOUS`, pero Google puede exigir una autorizacion inicial manual del propietario si aun no se aprobaron los scopes de Sheets/Drive.

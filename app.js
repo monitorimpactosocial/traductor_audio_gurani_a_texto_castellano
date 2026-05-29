@@ -1182,6 +1182,10 @@ async function registerServiceWorker() {
 
 async function init() {
   document.title = CONFIG.appName || "UNC Traductor Guarani";
+  const loginHint = $("#loginHint");
+  if (loginHint && CONFIG.backendMode === "demo") {
+    loginHint.textContent = "Modo demo local: admin.demo / admin-demo, linguista.demo / linguista-demo, cargador.demo / cargador-demo.";
+  }
   updateOnlineBadge();
   setupTabs();
   bindEvents();

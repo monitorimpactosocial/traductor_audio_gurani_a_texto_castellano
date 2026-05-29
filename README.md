@@ -104,7 +104,13 @@ Recursos configurados para este piloto:
 - Carpeta Drive de audios: https://drive.google.com/drive/folders/1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC
 - Repositorio objetivo: https://github.com/monitorimpactosocial/traductor_audio_gurani_a_texto_castellano.git
 
-Mientras `gasWebAppUrl` este vacio, el frontend queda en `backendMode: "demo"` y conserva los registros en IndexedDB. Para activar sincronizacion real, desplegar Apps Script como Web App y pegar la URL `/exec` en `config.js`.
+El backend Apps Script del piloto esta subido y desplegado en:
+
+```text
+https://script.google.com/macros/s/AKfycbwHed3yKFi85-mO38zeXAIql4FqU1wUkiC8uGPjPPRj8oDi_f-9OmBSmLeWdW-Ucbglww/exec
+```
+
+El Web App todavia requiere autorizacion inicial del propietario en Apps Script para poder responder anonimamente. Por eso la PWA publicada queda en `backendMode: "demo"` hasta completar esa autorizacion. Luego cambiar `backendMode` a `"gas"` en `config.js`.
 
 ## Servidor institucional UNC
 
