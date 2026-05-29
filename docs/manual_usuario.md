@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-UNC Traductor Guarani permite recolectar grabaciones de lectura en guarani, registrar metadatos linguisticos minimos y enviar datos a revision. Las grabaciones alimentan un corpus acustico; no entrenan automaticamente un traductor.
+UNC Traductor Guarani permite trabajar con audios en guarani o castellano para producir una transcripcion, una traduccion y correcciones revisables. La app no entrena automaticamente un traductor: guarda aportes con metadatos para que sean revisados antes de usarse en corpus o modelos.
 
 ## Inicio de sesion
 
@@ -12,62 +12,60 @@ UNC Traductor Guarani permite recolectar grabaciones de lectura en guarani, regi
 
 En modo demo local existen usuarios de prueba documentados en `README.md`. En produccion, el administrador debe crear usuarios en el backend.
 
-## Consentimiento
+## Antes de grabar
 
-Antes de grabar:
+Para registrar una nueva voz se requiere:
 
-1. Leer el texto de consentimiento.
-2. Indicar alias o elegir participacion anonima.
-3. Marcar aceptacion explicita.
-4. Guardar consentimiento.
-
-La app registra version del consentimiento, fecha, version de app y datos tecnicos del dispositivo.
-
-## Perfil linguistico
-
-Completar solo datos minimos:
-
-- rango de edad;
-- departamento, distrito o comunidad si corresponde;
-- lengua materna;
-- nivel de guarani;
-- variante o forma de habla;
-- otros idiomas.
+- consentimiento informado aceptado;
+- perfil linguistico minimo;
+- permiso de microfono del navegador.
 
 No ingresar numero de documento, telefono, direccion exacta ni datos personales innecesarios.
 
-## Grabacion
+## Traducir audio
 
-1. Abrir `Grabar`.
-2. Leer el texto mostrado.
-3. Presionar `Grabar`.
-4. Leer en voz clara.
-5. Presionar `Detener`.
-6. Escuchar el audio.
-7. Si no sirve, usar `Descartar` y repetir.
-8. Si sirve, usar `Guardar en cola`.
-9. Sincronizar cuando haya conexion.
+El trabajo principal esta en la pestana `Traducir audio`.
 
-La app valida duracion minima, maxima, tamano y tipo de audio.
+1. Elegir la direccion: `Audio guarani -> castellano` o `Audio castellano -> guarani`.
+2. Presionar `Grabar` o seleccionar un archivo en `Archivo de audio`.
+3. Presionar `Detener` cuando termine la lectura o exposicion.
+4. Escuchar el audio con el reproductor.
+5. Si no sirve, presionar `Descartar` y repetir.
+6. Escribir la transcripcion exacta de lo que se escucha.
+7. Escribir la traduccion al otro idioma.
+8. Agregar notas si hay ruido, dudas, variante linguistica o datos que deban anonimizarse.
+9. Presionar `Guardar aporte`.
 
-## Registros y dashboard
+El texto sugerido es opcional. Puede usarse para lectura guiada, pero tambien se puede subir o grabar un audio libre.
 
-Segun el rol, se puede revisar:
+## Editar o corregir aportes
 
-- grabaciones cargadas;
-- estado de sincronizacion;
-- estado de calidad;
-- cobertura por texto y tema;
-- duracion total acumulada;
-- pendientes de revision.
+La pestana `Aportes` muestra las contribuciones guardadas.
 
-## Traductor y correcciones
+- Usar los filtros para buscar por texto, estado de calidad o sincronizacion.
+- Presionar `Editar / corregir` en el aporte que se quiere revisar.
+- Cambiar transcripcion, traduccion, notas o estado.
+- Guardar la correccion.
 
-El modulo `Traductor` permite consultar una API institucional cuando exista. Las correcciones humanas se guardan como datos pendientes de revision. Solo correcciones validadas deben entrar al corpus paralelo.
+Si un aporte ya estaba sincronizado y se corrige localmente, vuelve a quedar pendiente para que el backend reciba la version corregida.
 
-## Offline
+## Dashboard
 
-Si no hay internet, la app guarda datos en IndexedDB. No se borran datos locales hasta confirmar guardado remoto. Usar `Sync` para reintentar.
+El dashboard resume:
+
+- total de aportes;
+- pendientes de revision;
+- aprobados y rechazados;
+- duracion acumulada;
+- cobertura por texto o tema cuando se usan textos sugeridos.
+
+## Traducir texto
+
+El modulo `Traductor texto` permite consultar una API institucional cuando exista. Si la traduccion generada no es correcta, se puede guardar una correccion humana para revision.
+
+## Offline y sincronizacion
+
+Si no hay internet, la app guarda datos en IndexedDB. No borra datos locales hasta confirmar el guardado remoto. Usar `Sync` para reintentar.
 
 ## Mensajes de error
 

@@ -1,7 +1,7 @@
 {
   "name": "UNC Traductor Guarani",
   "short_name": "UNC Guarani",
-  "description": "PWA para recolectar audios, textos, traducciones y revisiones linguisticas guarani-espanol.",
+  "description": "PWA para traducir audio entre guarani y castellano con transcripcion, correccion y revision.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

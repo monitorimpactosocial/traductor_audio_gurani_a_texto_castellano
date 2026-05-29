@@ -24,7 +24,8 @@ const state = {
   recordedDurationMs: 0,
   attemptNumber: 1,
   audioMonitor: null,
-  lastTranslationRequest: null
+  lastTranslationRequest: null,
+  editingRecordingId: null
 };
 
 const stores = ["prompts", "participants", "recordings", "logs", "errors", "feedback"];
@@ -358,8 +359,11 @@ async function bootAuthenticatedApp() {
   await refreshLocalState();
   restoreCurrentParticipant();
   setupQualityFilter();
+  setupEditQualityOptions();
+  updateTranslationLabels();
   pickNextPrompt();
   renderAll();
+  if (!hasPermission("capture")) showTab("dashboard");
 }
 
 function applyRoleVisibility() {
@@ -476,10 +480,6 @@ async function startRecording() {
     showTab("consentimiento");
     return;
   }
-  if (!state.currentPrompt) {
-    setMessage("#recordMessage", "No hay texto activo para grabar.", true);
-    return;
-  }
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
     setMessage("#recordMessage", "Este navegador no soporta grabacion con MediaRecorder.", true);
     return;
@@ -573,18 +573,19 @@ function stopMediaStream() {
   state.mediaStream = null;
 }
 
-function discardRecording() {
+function discardRecording(logDiscard = true) {
   state.audioBlob = null;
   state.audioChunks = [];
   state.recordedDurationMs = 0;
   $("#audioPlayback").removeAttribute("src");
   $("#audioPlayback").classList.add("hidden");
+  if ($("#audioFileInput")) $("#audioFileInput").value = "";
   $("#saveLocalBtn").disabled = true;
   $("#discardRecordBtn").disabled = true;
   $("#recordTimer").textContent = "00:00";
   $("#recordQualityHint").textContent = "Duracion valida: 1.2 a 90 segundos.";
   setRecordingUi("LISTO");
-  logEvent("grabacion descartada", "grabacion", {});
+  if (logDiscard) logEvent("grabacion descartada", "grabacion", {});
 }
 
 function startAudioMonitor(stream) {
@@ -652,21 +653,36 @@ async function sha256Blob(blob) {
 }
 
 async function saveRecordingLocally() {
-  if (!state.audioBlob || !state.currentPrompt || !state.currentParticipant) return;
+  if (!state.currentParticipant?.consent_accepted) {
+    setMessage("#recordMessage", "Registre consentimiento y perfil antes de guardar el aporte.", true);
+    showTab("consentimiento");
+    return;
+  }
+  if (!state.audioBlob) {
+    setMessage("#recordMessage", "Grabe o cargue un audio antes de guardar.", true);
+    return;
+  }
+  const direction = $("#audioTranslationDirection")?.value || "gn-es";
+  const sourceText = normalizeText($("#sourceText")?.value || "");
+  const targetText = normalizeText($("#targetText")?.value || "");
+  if (!sourceText) {
+    setMessage("#recordMessage", "Escriba la transcripcion antes de guardar.", true);
+    return;
+  }
 
   try {
     const timestamp = todayStamp();
     const participantId = state.currentParticipant.participant_id;
-    const promptId = state.currentPrompt.prompt_id;
+    const promptId = state.currentPrompt?.prompt_id || `AUDIO_${direction.toUpperCase()}`;
     const attempt = getNextAttemptNumber(participantId, promptId);
-    const extension = state.audioBlob.type.includes("ogg") ? "ogg" : "webm";
+    const extension = audioExtensionForBlob(state.audioBlob);
     const filename = `${participantId}_${promptId}_${attempt}_${timestamp}.${extension}`.replace(/[^A-Za-z0-9_.-]/g, "_");
     const hash = await sha256Blob(state.audioBlob);
     const recording = {
       recording_id: uuid("rec"),
       participant_id: participantId,
       prompt_id: promptId,
-      prompt_text: state.currentPrompt.text_guarani,
+      prompt_text: sourceText,
       attempt_number: attempt,
       audio_file_id: "",
       audio_url: "",
@@ -677,6 +693,13 @@ async function saveRecordingLocally() {
       audio_blob: state.audioBlob,
       hash_audio: hash,
       approx_volume_peak: getPeakVolume(),
+      task_type: "AUDIO_TRANSLATION",
+      translation_direction: direction,
+      source_language: direction === "gn-es" ? "guarani" : "castellano",
+      target_language: direction === "gn-es" ? "castellano" : "guarani",
+      source_text: sourceText,
+      translated_text: targetText,
+      correction_count: 0,
       created_at: nowIso(),
       created_by: state.session.usuario,
       origin: navigator.onLine ? "online" : "offline",
@@ -695,15 +718,69 @@ async function saveRecordingLocally() {
     await idbPut("recordings", recording);
     await logEvent("grabacion guardada", "grabacion", { filename }, { recording_id: recording.recording_id, prompt_id: promptId });
     await refreshLocalState();
-    discardRecording();
-    $("#fieldNotes").value = "";
+    discardRecording(false);
+    resetTranslationTextFields();
     pickNextPrompt();
     renderAll();
-    setMessage("#recordMessage", "Grabacion guardada localmente. Puede sincronizarse cuando haya conexion.");
+    setMessage("#recordMessage", "Aporte guardado. Puede editarlo en Aportes.");
   } catch (error) {
     await logError("grabacion", "saveRecordingLocally", error, "No se pudo guardar la grabacion local.");
     setMessage("#recordMessage", "No se pudo guardar la grabacion local.", true);
   }
+}
+
+function audioExtensionForBlob(blob) {
+  const fileExtension = String(blob?.name || "").split(".").pop()?.toLowerCase();
+  if (fileExtension && /^[a-z0-9]{2,5}$/.test(fileExtension) && fileExtension !== String(blob?.name || "").toLowerCase()) {
+    return fileExtension;
+  }
+  const type = String(blob?.type || "").toLowerCase();
+  if (type.includes("ogg")) return "ogg";
+  if (type.includes("mpeg") || type.includes("mp3")) return "mp3";
+  if (type.includes("wav")) return "wav";
+  if (type.includes("mp4") || type.includes("m4a")) return "m4a";
+  if (type.includes("flac")) return "flac";
+  if (type.includes("aac")) return "aac";
+  return "webm";
+}
+
+function resetTranslationTextFields() {
+  if ($("#sourceText")) $("#sourceText").value = "";
+  if ($("#targetText")) $("#targetText").value = "";
+  if ($("#fieldNotes")) $("#fieldNotes").value = "";
+}
+
+function updateTranslationLabels() {
+  const direction = $("#audioTranslationDirection")?.value || "gn-es";
+  const sourceLabel = direction === "gn-es" ? "Transcripcion en guarani" : "Transcripcion en castellano";
+  const targetLabel = direction === "gn-es" ? "Traduccion al castellano" : "Traduccion al guarani";
+  if ($("#sourceTextLabel")) $("#sourceTextLabel").textContent = sourceLabel;
+  if ($("#targetTextLabel")) $("#targetTextLabel").textContent = targetLabel;
+}
+
+function handleAudioFileInput(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  state.audioBlob = file;
+  state.audioChunks = [file];
+  state.audioMonitor = null;
+  state.recordedDurationMs = 0;
+  const url = URL.createObjectURL(file);
+  $("#audioPlayback").src = url;
+  $("#audioPlayback").classList.remove("hidden");
+  $("#saveLocalBtn").disabled = false;
+  $("#discardRecordBtn").disabled = false;
+  setRecordingUi("REVISANDO");
+  const probe = new Audio(url);
+  probe.onloadedmetadata = () => {
+    if (Number.isFinite(probe.duration)) {
+      state.recordedDurationMs = Math.round(probe.duration * 1000);
+      $("#recordTimer").textContent = formatDuration(state.recordedDurationMs);
+    }
+    renderQualityHint();
+  };
+  probe.onerror = renderQualityHint;
+  renderQualityHint();
 }
 
 function getNextAttemptNumber(participantId, promptId) {
@@ -794,6 +871,17 @@ function setupQualityFilter() {
   });
 }
 
+function setupEditQualityOptions() {
+  const select = $("#editQualityStatus");
+  if (!select || select.options.length) return;
+  (CONFIG.qualityStatuses || []).forEach((status) => {
+    const option = document.createElement("option");
+    option.value = status;
+    option.textContent = status;
+    select.appendChild(option);
+  });
+}
+
 function renderAll() {
   renderHome();
   renderRecords();
@@ -819,7 +907,7 @@ function filteredRecordings() {
   return state.recordings.filter((item) => {
     if (quality && item.quality_status !== quality) return false;
     if (sync && item.sync_status !== sync) return false;
-    if (search && !`${item.prompt_text} ${item.prompt_id} ${item.participant_id}`.toLowerCase().includes(search)) return false;
+    if (search && !`${item.prompt_text} ${item.source_text} ${item.translated_text} ${item.prompt_id} ${item.participant_id}`.toLowerCase().includes(search)) return false;
     if (state.session?.rol === "cargador" && item.created_by && item.created_by !== state.session.usuario) return false;
     return true;
   });
@@ -839,12 +927,14 @@ function renderRecords() {
       <thead>
         <tr>
           <th>Fecha</th>
-          <th>Participante</th>
-          <th>Prompt</th>
-          <th>Audio</th>
+          <th>Aporte</th>
+          <th>Direccion</th>
+          <th>Transcripcion</th>
+          <th>Traduccion</th>
+          <th>Reproducir</th>
           <th>Sync</th>
           <th>Calidad</th>
-          <th>Revision</th>
+          <th>Accion</th>
         </tr>
       </thead>
       <tbody>
@@ -855,24 +945,98 @@ function renderRecords() {
   target.querySelectorAll("[data-review-status]").forEach((select) => {
     select.addEventListener("change", () => updateRecordingReview(select.dataset.recordingId, select.value));
   });
+  target.querySelectorAll("[data-edit-recording]").forEach((button) => {
+    button.addEventListener("click", () => startEditingContribution(button.dataset.recordingId));
+  });
 }
 
 function renderRecordingRow(item, canReview) {
   const audioUrl = item.audio_url || (item.audio_blob ? URL.createObjectURL(item.audio_blob) : "");
+  const direction = item.translation_direction || "gn-es";
+  const sourceText = item.source_text || item.prompt_text || "";
+  const targetText = item.translated_text || "";
   const qualityControl = canReview
     ? `<select data-review-status data-recording-id="${escapeHtml(item.recording_id)}">${(CONFIG.qualityStatuses || []).map((status) => `<option ${status === item.quality_status ? "selected" : ""}>${status}</option>`).join("")}</select>`
     : `<span class="badge">${escapeHtml(item.quality_status)}</span>`;
   return `
     <tr>
       <td>${escapeHtml(new Date(item.created_at).toLocaleString())}</td>
-      <td>${escapeHtml(item.participant_id)}</td>
-      <td><strong>${escapeHtml(item.prompt_id)}</strong><br>${escapeHtml(item.prompt_text || "").slice(0, 90)}</td>
+      <td><strong>${escapeHtml(item.audio_filename || item.recording_id)}</strong><br><span class="hint">${escapeHtml(item.participant_id)}</span></td>
+      <td>${escapeHtml(direction === "gn-es" ? "Guarani -> castellano" : "Castellano -> guarani")}</td>
+      <td>${escapeHtml(sourceText).slice(0, 160)}</td>
+      <td>${escapeHtml(targetText).slice(0, 160)}</td>
       <td>${audioUrl ? `<audio controls src="${audioUrl}"></audio>` : escapeHtml(item.audio_filename)}</td>
       <td><span class="badge ${item.sync_status === "ERROR_SYNC" ? "danger" : item.sync_status === "PENDIENTE" ? "warning" : ""}">${escapeHtml(item.sync_status)}</span></td>
       <td>${qualityControl}</td>
-      <td>${escapeHtml(item.review_notes || "")}</td>
+      <td><button data-edit-recording data-recording-id="${escapeHtml(item.recording_id)}" type="button">Editar / corregir</button></td>
     </tr>
   `;
+}
+
+function startEditingContribution(recordingId) {
+  const recording = state.recordings.find((item) => item.recording_id === recordingId);
+  if (!recording) return;
+  state.editingRecordingId = recordingId;
+  $("#editContributionPanel").classList.remove("hidden");
+  $("#editContributionId").textContent = recording.audio_filename || recording.recording_id;
+  $("#editTranslationDirection").value = recording.translation_direction || "gn-es";
+  $("#editQualityStatus").value = recording.quality_status || "PENDIENTE_REVISION";
+  $("#editSourceText").value = recording.source_text || recording.prompt_text || "";
+  $("#editTargetText").value = recording.translated_text || "";
+  $("#editReviewNotes").value = recording.review_notes || "";
+  const audioUrl = recording.audio_url || (recording.audio_blob ? URL.createObjectURL(recording.audio_blob) : "");
+  if (audioUrl) {
+    $("#editAudioPlayback").src = audioUrl;
+    $("#editAudioPlayback").classList.remove("hidden");
+  } else {
+    $("#editAudioPlayback").removeAttribute("src");
+    $("#editAudioPlayback").classList.add("hidden");
+  }
+  setMessage("#editContributionMessage", "");
+  $("#editContributionPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeEditContribution() {
+  state.editingRecordingId = null;
+  $("#editContributionPanel").classList.add("hidden");
+  setMessage("#editContributionMessage", "");
+}
+
+async function saveContributionEdits(event) {
+  event.preventDefault();
+  const recording = state.recordings.find((item) => item.recording_id === state.editingRecordingId);
+  if (!recording) return;
+  const direction = $("#editTranslationDirection").value;
+  const qualityStatus = $("#editQualityStatus").value;
+  const sourceText = normalizeText($("#editSourceText").value);
+  const targetText = normalizeText($("#editTargetText").value);
+  if (!sourceText) {
+    setMessage("#editContributionMessage", "La transcripcion no puede quedar vacia.", true);
+    return;
+  }
+  const updated = {
+    ...recording,
+    translation_direction: direction,
+    source_language: direction === "gn-es" ? "guarani" : "castellano",
+    target_language: direction === "gn-es" ? "castellano" : "guarani",
+    source_text: sourceText,
+    translated_text: targetText,
+    prompt_text: sourceText,
+    quality_status: qualityStatus,
+    review_status: qualityStatus === "APROBADO" ? "VALIDADO" : qualityStatus === "RECHAZADO" ? "RECHAZADO" : "PENDIENTE_REVISION_HUMANA",
+    reviewer_user: hasPermission("review") ? state.session.usuario : recording.reviewer_user || "",
+    reviewed_at: hasPermission("review") ? nowIso() : recording.reviewed_at || "",
+    review_notes: $("#editReviewNotes").value.trim(),
+    correction_count: Number(recording.correction_count || 0) + 1,
+    corrected_by: state.session.usuario,
+    corrected_at: nowIso(),
+    sync_status: recording.sync_status === "SINCRONIZADO" ? "PENDIENTE" : recording.sync_status
+  };
+  await idbPut("recordings", updated);
+  await logEvent("correccion de aporte", "aportes", { recording_id: recording.recording_id, qualityStatus }, { recording_id: recording.recording_id, prompt_id: recording.prompt_id });
+  await refreshLocalState();
+  renderAll();
+  setMessage("#editContributionMessage", "Correccion guardada.");
 }
 
 async function updateRecordingReview(recordingId, qualityStatus) {
@@ -1086,8 +1250,10 @@ async function exportFile(filename) {
   const recordingHeaders = [
     "recording_id", "participant_id", "prompt_id", "attempt_number", "audio_file_id", "audio_url",
     "audio_filename", "audio_mime_type", "audio_duration_ms", "audio_size_bytes", "hash_audio",
-    "created_at", "origin", "sync_status", "quality_status", "review_status", "reviewer_user",
-    "reviewed_at", "review_notes", "app_version", "device_type", "browser"
+    "task_type", "translation_direction", "source_language", "target_language", "source_text",
+    "translated_text", "correction_count", "corrected_by", "corrected_at", "created_at", "origin",
+    "sync_status", "quality_status", "review_status", "reviewer_user", "reviewed_at", "review_notes",
+    "app_version", "device_type", "browser"
   ];
   const promptHeaders = [
     "prompt_id", "text_guarani", "text_guarani_normalized", "text_spanish", "source", "topic",
@@ -1104,11 +1270,13 @@ async function exportFile(filename) {
   } else if (filename === "manifest_asr.jsonl") {
     const lines = state.recordings.map((recording) => JSON.stringify({
       audio_filepath: recording.audio_url || `audio/raw/${recording.audio_filename}`,
-      text: recording.prompt_text,
+      text: recording.source_text || recording.prompt_text,
       duration_ms: recording.audio_duration_ms,
       prompt_id: recording.prompt_id,
       participant_id: recording.participant_id,
       quality_status: recording.quality_status,
+      translation_direction: recording.translation_direction,
+      translated_text: recording.translated_text,
       device_type: recording.device_type,
       browser: recording.browser
     }));
@@ -1128,6 +1296,13 @@ async function exportFile(filename) {
         text_spanish: item.direction === "gn-es" ? item.corrected_translation : item.original_text,
         status: item.review_status,
         version: item.model_version
+      })),
+      ...state.recordings.filter((item) => item.translated_text).map((item) => ({
+        source_id: item.recording_id,
+        text_guarani: item.translation_direction === "gn-es" ? item.source_text : item.translated_text,
+        text_spanish: item.translation_direction === "gn-es" ? item.translated_text : item.source_text,
+        status: item.review_status,
+        version: item.app_version
       }))
     ];
     downloadText(filename, buildCsv(rows, ["source_id", "text_guarani", "text_spanish", "status", "version"]), "text/csv;charset=utf-8");
@@ -1148,10 +1323,12 @@ function bindEvents() {
   $("#consentForm").addEventListener("submit", handleConsent);
   $("#profileForm").addEventListener("submit", handleProfile);
   $("#nextPromptBtn").addEventListener("click", pickNextPrompt);
+  $("#audioTranslationDirection").addEventListener("change", updateTranslationLabels);
+  $("#audioFileInput").addEventListener("change", handleAudioFileInput);
   $("#startRecordBtn").addEventListener("click", startRecording);
   $("#pauseRecordBtn").addEventListener("click", pauseRecording);
   $("#stopRecordBtn").addEventListener("click", stopRecording);
-  $("#discardRecordBtn").addEventListener("click", discardRecording);
+  $("#discardRecordBtn").addEventListener("click", () => discardRecording(true));
   $("#saveLocalBtn").addEventListener("click", saveRecordingLocally);
   $("#syncNowBtn").addEventListener("click", syncPending);
   $("#manualSyncBtn").addEventListener("click", syncPending);
@@ -1160,6 +1337,8 @@ function bindEvents() {
   $("#filterQuality").addEventListener("change", renderRecords);
   $("#filterSync").addEventListener("change", renderRecords);
   $("#filterSearch").addEventListener("input", renderRecords);
+  $("#editContributionForm").addEventListener("submit", saveContributionEdits);
+  $("#cancelEditContributionBtn").addEventListener("click", closeEditContribution);
   $("#promptForm").addEventListener("submit", handlePromptForm);
   $("#translatorForm").addEventListener("submit", handleTranslator);
   $("#saveFeedbackBtn").addEventListener("click", saveTranslationFeedback);

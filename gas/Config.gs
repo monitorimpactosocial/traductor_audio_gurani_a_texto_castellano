@@ -1,6 +1,6 @@
 var UNC = {
   APP_NAME: 'UNC_TRADUCTOR_GUARANI',
-  DEFAULT_VERSION: '0.1.0-piloto',
+  DEFAULT_VERSION: '0.1.1-piloto',
   PILOT_SPREADSHEET_ID: '1x7uBb_rsj29yjt2mQOiKPHKFiE8Cr0JrheWHxAEl32c',
   PILOT_DRIVE_FOLDER_ID: '1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC',
   ROLES: ['admin', 'supervisor', 'linguista', 'cargador', 'viewer'],
@@ -28,7 +28,7 @@ var UNC = {
     USUARIOS: ['usuario', 'password_hash', 'nombre', 'correo', 'rol', 'activo', 'fecha_creacion', 'ultimo_acceso', 'observacion'],
     PARTICIPANTES: ['participant_id', 'alias', 'rango_edad', 'departamento', 'distrito', 'comunidad', 'lengua_materna', 'nivel_guarani', 'variante_guarani', 'otros_idiomas', 'consent_version', 'consent_accepted', 'created_at', 'app_version'],
     PROMPTS: ['prompt_id', 'text_guarani', 'text_guarani_normalized', 'text_spanish', 'source', 'topic', 'difficulty_level', 'token_count', 'character_count', 'status', 'version', 'created_at', 'updated_at'],
-    RECORDINGS: ['recording_id', 'participant_id', 'prompt_id', 'attempt_number', 'audio_file_id', 'audio_url', 'audio_filename', 'audio_mime_type', 'audio_duration_ms', 'audio_size_bytes', 'hash_audio', 'created_at', 'origin', 'sync_status', 'quality_status', 'review_status', 'reviewer_user', 'reviewed_at', 'review_notes', 'app_version', 'device_type', 'browser'],
+    RECORDINGS: ['recording_id', 'participant_id', 'prompt_id', 'attempt_number', 'audio_file_id', 'audio_url', 'audio_filename', 'audio_mime_type', 'audio_duration_ms', 'audio_size_bytes', 'hash_audio', 'created_at', 'origin', 'sync_status', 'quality_status', 'review_status', 'reviewer_user', 'reviewed_at', 'review_notes', 'app_version', 'device_type', 'browser', 'prompt_text', 'task_type', 'translation_direction', 'source_language', 'target_language', 'source_text', 'translated_text', 'approx_volume_peak', 'corpus_state', 'created_by', 'correction_count', 'corrected_by', 'corrected_at', 'sync_error', 'sync_error_at'],
     ARCHIVOS: ['file_id', 'recording_id', 'participant_id', 'prompt_id', 'filename', 'mime_type', 'drive_file_id', 'drive_url', 'upload_status', 'created_at', 'size_bytes', 'hash_file'],
     LOG: ['fecha_hora', 'evento', 'usuario', 'rol', 'participant_id', 'recording_id', 'prompt_id', 'modulo', 'detalle', 'device_info', 'app_version'],
     ERRORES: ['fecha_hora', 'modulo', 'funcion', 'tipo_error', 'mensaje_tecnico', 'mensaje_usuario', 'usuario', 'device_info', 'app_version'],
@@ -71,6 +71,18 @@ function getSheet_(sheetName) {
   if (headers && sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
+  } else if (headers) {
+    var currentLastColumn = Math.max(sheet.getLastColumn(), 1);
+    var currentHeaders = sheet.getRange(1, 1, 1, currentLastColumn).getValues()[0].filter(function (header) {
+      return String(header || '').trim() !== '';
+    });
+    var missingHeaders = headers.filter(function (header) {
+      return currentHeaders.indexOf(header) < 0;
+    });
+    if (missingHeaders.length) {
+      sheet.getRange(1, currentHeaders.length + 1, 1, missingHeaders.length).setValues([missingHeaders]);
+      sheet.setFrozenRows(1);
+    }
   }
   return sheet;
 }

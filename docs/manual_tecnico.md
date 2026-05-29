@@ -5,7 +5,7 @@
 - `index.html`: estructura de interfaz.
 - `styles.css`: estilos institucionales responsive.
 - `config.js`: version, modo backend, endpoints, roles y parametros de audio.
-- `app.js`: login, roles, IndexedDB, MediaRecorder, sincronizacion, dashboard y exportaciones.
+- `app.js`: login, roles, IndexedDB, MediaRecorder, carga de audio, transcripcion, traduccion, correccion de aportes, sincronizacion, dashboard y exportaciones.
 - `manifest.json`: instalacion PWA.
 - `service-worker.js`: cache offline.
 - `gas/`: backend Google Apps Script modular.
@@ -56,6 +56,17 @@ Stores:
 
 Los audios quedan como `Blob` en `recordings.audio_blob` hasta confirmacion remota.
 
+Campos funcionales nuevos en `recordings`:
+
+- `task_type`: por defecto `AUDIO_TRANSLATION`.
+- `translation_direction`: `gn-es` o `es-gn`.
+- `source_language` y `target_language`.
+- `source_text`: transcripcion del audio.
+- `translated_text`: traduccion o correccion humana.
+- `correction_count`, `corrected_by`, `corrected_at`.
+
+La pestana `Aportes` permite corregir registros existentes. Si un registro sincronizado se edita, vuelve a `sync_status=PENDIENTE` para reenviar la version corregida.
+
 ## Google Apps Script
 
 Configurar Script Properties:
@@ -69,7 +80,7 @@ Para este piloto:
 ```text
 SPREADSHEET_ID=1x7uBb_rsj29yjt2mQOiKPHKFiE8Cr0JrheWHxAEl32c
 DRIVE_FOLDER_ID=1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC
-APP_VERSION=0.1.0-piloto
+APP_VERSION=0.1.1-piloto
 ```
 
 Ejecutar:
@@ -78,6 +89,8 @@ Ejecutar:
 setupDatabase()
 bootstrapAdmin("admin", "cambiar-esta-clave", "Administrador", "correo@unc.edu.py")
 ```
+
+`setupDatabase()` tambien agrega columnas nuevas faltantes en hojas existentes, por ejemplo los campos de transcripcion, traduccion y correccion en `RECORDINGS`.
 
 Publicar como Web App con acceso controlado segun politica institucional.
 
@@ -116,7 +129,7 @@ INCORPORADO_A_CORPUS
 USADO_EN_ENTRENAMIENTO
 ```
 
-El entrenamiento se ejecuta por lotes, no en tiempo real. Cada modelo registra corpus, parametros, metricas, revision humana y estado de despliegue.
+El entrenamiento se ejecuta por lotes, no en tiempo real. Cada modelo registra corpus, parametros, metricas, revision humana y estado de despliegue. La app web captura aportes; el servidor UNC debe decidir cuando un dato validado pasa a corpus, entrenamiento o publicacion.
 
 ## Evaluacion
 

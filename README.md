@@ -1,6 +1,6 @@
 # UNC_TRADUCTOR_GUARANI
 
-Aplicacion web progresiva para recolectar grabaciones de voz en guarani, textos monolingues, pares guarani-espanol, correcciones humanas y metadatos auditables. La app es la puerta de entrada del dato; el entrenamiento de modelos debe ocurrir despues, en servidor institucional UNC, solo con datos validados.
+Aplicacion web progresiva para traducir audio entre guarani y castellano mediante grabacion o carga de archivos, transcripcion manual, traduccion/correccion humana y metadatos auditables. La app es la puerta de entrada del dato; el entrenamiento de modelos debe ocurrir despues, en servidor institucional UNC, solo con datos validados.
 
 ## Diagnostico de la ruta revisada
 
@@ -31,10 +31,11 @@ No existian `manifest.json`, `service-worker.js`, `config.js`, `gas/`, `data/`, 
 - IndexedDB para prompts, participantes, grabaciones, logs, errores y feedback.
 - Login demo con roles.
 - Consentimiento informado y perfil linguistico minimo.
-- Lectura guiada con seleccion por baja cobertura.
+- Flujo principal `Traducir audio`: grabar o cargar audio, escribir transcripcion y completar traduccion guarani-castellano o castellano-guarani.
 - Grabacion con validacion de duracion, tamano, MIME type, hash SHA-256 y volumen aproximado.
 - Cola offline y sincronizacion segura.
-- Registros, revision manual, dashboard y exportaciones.
+- Modulo `Aportes` para editar o corregir transcripciones, traducciones, notas y estado de revision.
+- Revision manual, dashboard y exportaciones.
 - Backend Google Apps Script modular en `gas/`.
 - Documentacion en `docs/`.
 - Datos de ejemplo en `data/`.
@@ -49,6 +50,19 @@ No existian `manifest.json`, `service-worker.js`, `config.js`, `gas/`, `data/`, 
 - Offline: `service-worker.js` + IndexedDB + sincronizacion manual/automatica.
 - Seguridad: roles en frontend y validacion backend; contrasenas hasheadas en Sheets; credenciales por PropertiesService, no en frontend.
 - Privacidad: `participant_id` anonimo o seudonimo; no se almacenan datos personales directos salvo justificacion y consentimiento.
+
+## Uso principal
+
+1. Iniciar sesion.
+2. Registrar consentimiento y perfil minimo si se va a grabar una nueva voz.
+3. Abrir `Traducir audio`.
+4. Elegir direccion: audio guarani -> castellano o audio castellano -> guarani.
+5. Grabar desde el microfono o cargar un archivo de audio.
+6. Escribir la transcripcion exacta de lo escuchado.
+7. Escribir o corregir la traduccion.
+8. Guardar el aporte.
+9. Abrir `Aportes` para editar contribuciones existentes, revisar calidad o corregir traducciones.
+10. Sincronizar cuando exista backend autorizado.
 
 ## Modo demo local
 
@@ -83,7 +97,7 @@ Estos usuarios son solo para piloto local. En produccion se deben gestionar usua
 ```text
 SPREADSHEET_ID=1x7uBb_rsj29yjt2mQOiKPHKFiE8Cr0JrheWHxAEl32c
 DRIVE_FOLDER_ID=1uR9AEYUN89hE-HpURiUXEI1ro3kGQuMC
-APP_VERSION=0.1.0-piloto
+APP_VERSION=0.1.1-piloto
 ```
 
 6. Ejecutar `setupDatabase()` desde Apps Script.
@@ -109,6 +123,8 @@ El backend Apps Script del piloto esta subido y desplegado en:
 ```text
 https://script.google.com/macros/s/AKfycbwHed3yKFi85-mO38zeXAIql4FqU1wUkiC8uGPjPPRj8oDi_f-9OmBSmLeWdW-Ucbglww/exec
 ```
+
+Ultima version desplegada: `@6` / `0.1.1-piloto`. La hoja `RECORDINGS` del Sheet operativo fue migrada con columnas para `source_text`, `translated_text`, `translation_direction` y datos de correccion.
 
 El Web App todavia requiere autorizacion inicial del propietario en Apps Script para poder responder anonimamente. Por eso la PWA publicada queda en `backendMode: "demo"` hasta completar esa autorizacion. Luego cambiar `backendMode` a `"gas"` en `config.js`.
 
@@ -159,9 +175,10 @@ parallel_text/
 - Login y roles demo.
 - Consentimiento informado.
 - Perfil linguistico minimo.
-- Textos en guarani desde JSON/IndexedDB.
-- Grabacion con `MediaRecorder`.
-- Reproduccion y repeticion.
+- Traduccion de audio guarani -> castellano y castellano -> guarani.
+- Grabacion con `MediaRecorder` y carga de archivos de audio.
+- Reproduccion, descarte y repeticion.
+- Edicion/correccion de aportes existentes.
 - Audio guardado como `Blob` local y preparado como archivo remoto.
 - Metadatos estructurados con `participant_id` y `prompt_id`.
 - Indicador online/offline.

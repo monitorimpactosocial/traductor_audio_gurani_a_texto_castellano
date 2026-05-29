@@ -33,7 +33,22 @@ function saveRecordingMetadata_(recording, fileInfo) {
     review_notes: recording.review_notes || '',
     app_version: recording.app_version || getAppVersion(),
     device_type: recording.device_type || '',
-    browser: recording.browser || ''
+    browser: recording.browser || '',
+    prompt_text: recording.prompt_text || recording.source_text || '',
+    task_type: recording.task_type || 'AUDIO_TRANSLATION',
+    translation_direction: recording.translation_direction || 'gn-es',
+    source_language: recording.source_language || '',
+    target_language: recording.target_language || '',
+    source_text: recording.source_text || recording.prompt_text || '',
+    translated_text: recording.translated_text || '',
+    approx_volume_peak: recording.approx_volume_peak || '',
+    corpus_state: recording.corpus_state || 'RECIBIDO',
+    created_by: recording.created_by || '',
+    correction_count: recording.correction_count || 0,
+    corrected_by: recording.corrected_by || '',
+    corrected_at: recording.corrected_at || '',
+    sync_error: recording.sync_error || '',
+    sync_error_at: recording.sync_error_at || ''
   };
   upsertObject_(UNC.SHEETS.RECORDINGS, 'recording_id', row);
   return row;

@@ -48,11 +48,13 @@ function exportData(payload, session) {
       var prompt = promptsById[recording.prompt_id] || {};
       return JSON.stringify({
         audio_filepath: recording.audio_url,
-        text: prompt.text_guarani || '',
+        text: recording.source_text || recording.prompt_text || prompt.text_guarani || '',
         duration_ms: recording.audio_duration_ms,
         prompt_id: recording.prompt_id,
         participant_id: recording.participant_id,
         quality_status: recording.quality_status,
+        translation_direction: recording.translation_direction || '',
+        translated_text: recording.translated_text || '',
         device_type: recording.device_type,
         browser: recording.browser
       });
@@ -71,12 +73,23 @@ function exportData(payload, session) {
         version: prompt.version
       };
     });
+    readObjects_(UNC.SHEETS.RECORDINGS).filter(function (recording) {
+      return recording.translated_text;
+    }).forEach(function (recording) {
+      parallelRows.push({
+        prompt_id: recording.prompt_id,
+        text_guarani: recording.translation_direction === 'gn-es' ? recording.source_text : recording.translated_text,
+        text_spanish: recording.translation_direction === 'gn-es' ? recording.translated_text : recording.source_text,
+        status: recording.review_status,
+        version: recording.app_version
+      });
+    });
     count = parallelRows.length;
     url = createExportFile_(type, objectsToCsv_(parallelRows, ['prompt_id', 'text_guarani', 'text_spanish', 'status', 'version']), 'text/csv');
   } else if (type === 'quality_review.csv') {
     var qualityRows = readObjects_(UNC.SHEETS.RECORDINGS);
     count = qualityRows.length;
-    url = createExportFile_(type, objectsToCsv_(qualityRows, ['recording_id', 'quality_status', 'review_status', 'reviewer_user', 'reviewed_at', 'review_notes']), 'text/csv');
+    url = createExportFile_(type, objectsToCsv_(qualityRows, ['recording_id', 'quality_status', 'review_status', 'reviewer_user', 'reviewed_at', 'review_notes', 'source_text', 'translated_text']), 'text/csv');
   } else {
     throw new Error('Tipo de exportacion no soportado');
   }

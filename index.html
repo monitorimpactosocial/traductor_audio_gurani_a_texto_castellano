@@ -10,13 +10,13 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <noscript>Esta aplicacion necesita JavaScript para grabar audio, guardar datos locales y sincronizar registros.</noscript>
+    <noscript>Esta aplicacion necesita JavaScript para grabar o cargar audio, escribir traducciones, guardar datos locales y sincronizar aportes.</noscript>
 
     <section id="loginView" class="login-shell" aria-labelledby="loginTitle">
       <div class="login-panel">
         <div class="brand-mark" aria-hidden="true">UNC</div>
         <h1 id="loginTitle">UNC Traductor Guarani</h1>
-        <p>Plataforma para recolectar, validar y versionar datos linguisticos guarani-espanol con trazabilidad institucional.</p>
+        <p>Herramienta para convertir audios en guarani o castellano en transcripciones, traducciones y correcciones revisables.</p>
         <form id="loginForm" class="form-grid">
           <label>
             Usuario
@@ -39,7 +39,7 @@
           <div class="brand-mark small" aria-hidden="true">UNC</div>
           <div>
             <strong>UNC Traductor Guarani</strong>
-            <span id="appVersionLabel">v0.1.0</span>
+            <span id="appVersionLabel">v0.1.1-piloto</span>
           </div>
         </div>
         <div class="session-box">
@@ -51,33 +51,33 @@
 
       <div class="layout">
         <nav class="tabs" aria-label="Modulos principales">
-          <button class="tab active" data-tab="inicio" type="button">Inicio</button>
+          <button class="tab active" data-tab="grabar" data-permission="capture" type="button">Traducir audio</button>
+          <button class="tab" data-tab="registros" type="button">Aportes</button>
+          <button class="tab" data-tab="inicio" type="button">Resumen</button>
           <button class="tab" data-tab="consentimiento" data-permission="capture" type="button">Consentimiento</button>
           <button class="tab" data-tab="perfil" data-permission="capture" type="button">Perfil</button>
-          <button class="tab" data-tab="grabar" data-permission="capture" type="button">Grabar</button>
-          <button class="tab" data-tab="registros" data-permission="review" type="button">Registros</button>
           <button class="tab" data-tab="dashboard" data-permission="dashboard" type="button">Dashboard</button>
-          <button class="tab" data-tab="traductor" data-permission="translate" type="button">Traductor</button>
-          <button class="tab" data-tab="admin" data-permission="admin" type="button">Admin</button>
+          <button class="tab" data-tab="traductor" data-permission="translate" type="button">Traductor texto</button>
+          <button class="tab" data-tab="admin" data-permission="admin" type="button">Textos</button>
           <button class="tab" data-tab="exports" data-permission="exports" type="button">Exportar</button>
           <button class="tab" data-tab="sync" type="button">Sync</button>
           <button class="tab" data-tab="ayuda" type="button">Ayuda</button>
         </nav>
 
         <main class="content">
-          <section id="tab-inicio" class="tab-panel active" aria-labelledby="inicioTitle">
+          <section id="tab-inicio" class="tab-panel" aria-labelledby="inicioTitle">
             <div class="page-heading">
               <div>
-                <h2 id="inicioTitle">Inicio</h2>
-                <p>Recolecta audios, textos, traducciones y correcciones validadas para construir corpus auditables y mejorar progresivamente modelos UNC.</p>
+                <h2 id="inicioTitle">Resumen</h2>
+                <p>Estado general de aportes, sincronizacion y revision. Para trabajar, use primero Traducir audio y luego Aportes.</p>
               </div>
-              <button class="primary" data-jump="grabar" type="button">Nueva grabacion</button>
+              <button class="primary" data-jump="grabar" type="button">Traducir audio</button>
             </div>
             <div class="kpi-grid">
-              <article class="kpi-card"><span>Grabaciones</span><strong id="kpiRecordings">0</strong></article>
+              <article class="kpi-card"><span>Aportes</span><strong id="kpiRecordings">0</strong></article>
               <article class="kpi-card"><span>Pendientes sync</span><strong id="kpiPending">0</strong></article>
               <article class="kpi-card"><span>Participantes</span><strong id="kpiParticipants">0</strong></article>
-              <article class="kpi-card"><span>Prompts activos</span><strong id="kpiPrompts">0</strong></article>
+              <article class="kpi-card"><span>Textos sugeridos</span><strong id="kpiPrompts">0</strong></article>
             </div>
             <div class="panel-grid two">
               <section class="panel">
@@ -112,7 +112,7 @@
             </div>
             <form id="consentForm" class="panel form-grid">
               <div class="notice">
-                Se grabara la voz del participante leyendo textos en guarani. Los audios y metadatos podran utilizarse para investigacion, desarrollo linguistico, reconocimiento de voz, evaluacion de pronunciacion y entrenamiento futuro de modelos, siempre con revision y gobernanza institucional.
+                Se grabara o cargara la voz del participante para transcribir y traducir entre guarani y castellano. Los audios y metadatos podran utilizarse para investigacion, desarrollo linguistico, reconocimiento de voz, evaluacion de pronunciacion y entrenamiento futuro de modelos, siempre con revision y gobernanza institucional.
               </div>
               <label>
                 Alias o seudonimo
@@ -135,7 +135,7 @@
             <div class="page-heading">
               <div>
                 <h2 id="profileTitle">Perfil linguistico minimo</h2>
-                <p>El perfil evita recolectar datos personales directos y permite analizar cobertura por edad, territorio, variante y dominio del idioma.</p>
+                <p>El perfil minimo permite interpretar cada traduccion sin pedir documentos, telefono ni datos personales innecesarios.</p>
               </div>
               <span id="participantIdBadge" class="badge">Sin perfil</span>
             </div>
@@ -178,56 +178,78 @@
             </form>
           </section>
 
-          <section id="tab-grabar" class="tab-panel" aria-labelledby="recordTitle">
+          <section id="tab-grabar" class="tab-panel active" aria-labelledby="recordTitle">
             <div class="page-heading">
               <div>
-                <h2 id="recordTitle">Lectura guiada y grabacion</h2>
-                <p>Los textos se seleccionan priorizando baja cobertura para mejorar el valor de cada nueva muestra del corpus acustico.</p>
+                <h2 id="recordTitle">Traducir audio</h2>
+                <p>Grabe o cargue un audio, escriba lo que se escucha y complete la traduccion al otro idioma.</p>
               </div>
-              <button id="nextPromptBtn" type="button">Siguiente texto</button>
+              <button id="syncNowBtn" type="button">Sincronizar</button>
             </div>
-            <section class="prompt-panel">
+            <div class="translation-workspace">
+              <section class="panel recorder">
+                <h3>Audio</h3>
+                <label>Direccion de traduccion
+                  <select id="audioTranslationDirection">
+                    <option value="gn-es">Audio guarani -> castellano</option>
+                    <option value="es-gn">Audio castellano -> guarani</option>
+                  </select>
+                </label>
+                <div class="rec-status">
+                  <span id="recordState" class="badge">Listo</span>
+                  <strong id="recordTimer">00:00</strong>
+                  <span id="recordQualityHint" class="hint">Duracion valida: 1.2 a 90 segundos.</span>
+                </div>
+                <div class="rec-controls">
+                  <button id="startRecordBtn" class="primary" type="button">Grabar</button>
+                  <button id="pauseRecordBtn" type="button" disabled>Pausar</button>
+                  <button id="stopRecordBtn" type="button" disabled>Detener</button>
+                  <button id="discardRecordBtn" class="danger" type="button" disabled>Descartar</button>
+                </div>
+                <label>Archivo de audio
+                  <input id="audioFileInput" type="file" accept="audio/*" />
+                </label>
+                <audio id="audioPlayback" controls class="full-width hidden"></audio>
+              </section>
+
+              <section class="panel form-grid">
+                <h3>Texto y traduccion</h3>
+                <label><span id="sourceTextLabel">Transcripcion en guarani</span>
+                  <textarea id="sourceText" rows="5" placeholder="Escriba aqui lo que se escucha en el audio."></textarea>
+                </label>
+                <label><span id="targetTextLabel">Traduccion al castellano</span>
+                  <textarea id="targetText" rows="5" placeholder="Escriba o corrija la traduccion."></textarea>
+                </label>
+                <label>Notas
+                  <textarea id="fieldNotes" rows="3" placeholder="Dudas, variante, ruido, nombres que deban anonimizarse..."></textarea>
+                </label>
+                <div class="rec-controls">
+                  <button id="saveLocalBtn" class="primary" type="button" disabled>Guardar aporte</button>
+                  <button data-jump="registros" type="button">Ver aportes</button>
+                </div>
+                <div id="recordMessage" class="message" role="status"></div>
+              </section>
+            </div>
+
+            <section class="panel compact-panel">
+              <h3>Texto sugerido opcional</h3>
               <div class="prompt-meta">
                 <span id="promptIdLabel">prompt_id: -</span>
                 <span id="promptTopicLabel">tema: -</span>
                 <span id="promptDifficultyLabel">nivel: -</span>
               </div>
-              <p id="promptText" class="prompt-text">Cargando texto...</p>
-              <details>
-                <summary>Traduccion y fuente</summary>
-                <p id="promptSpanish">Sin traduccion disponible.</p>
-                <p id="promptSource" class="hint"></p>
-              </details>
-            </section>
-            <section class="panel recorder">
-              <div class="rec-status">
-                <span id="recordState" class="badge">Listo</span>
-                <strong id="recordTimer">00:00</strong>
-                <span id="recordQualityHint" class="hint">Duracion valida: 1.2 a 90 segundos.</span>
-              </div>
-              <div class="rec-controls">
-                <button id="startRecordBtn" class="primary" type="button">Grabar</button>
-                <button id="pauseRecordBtn" type="button" disabled>Pausar</button>
-                <button id="stopRecordBtn" type="button" disabled>Detener</button>
-                <button id="discardRecordBtn" class="danger" type="button" disabled>Descartar</button>
-              </div>
-              <audio id="audioPlayback" controls class="full-width hidden"></audio>
-              <label>Notas de campo
-                <textarea id="fieldNotes" rows="3" placeholder="Ruido, interrupciones, variante, observaciones breves..."></textarea>
-              </label>
-              <div class="rec-controls">
-                <button id="saveLocalBtn" class="primary" type="button" disabled>Guardar en cola</button>
-                <button id="syncNowBtn" type="button">Sincronizar ahora</button>
-              </div>
-              <div id="recordMessage" class="message" role="status"></div>
+              <p id="promptText" class="suggested-text">Cargando texto...</p>
+              <p id="promptSpanish" class="hint"></p>
+              <p id="promptSource" class="hint"></p>
+              <button id="nextPromptBtn" type="button">Otro texto</button>
             </section>
           </section>
 
           <section id="tab-registros" class="tab-panel" aria-labelledby="recordsTitle">
             <div class="page-heading">
               <div>
-                <h2 id="recordsTitle">Registros</h2>
-                <p>Revision de metadatos, estado de sincronizacion y calidad de audio.</p>
+                <h2 id="recordsTitle">Aportes</h2>
+                <p>Busque un aporte guardado y use Editar / corregir para cambiar transcripcion, traduccion, notas o estado.</p>
               </div>
               <button id="refreshRecordsBtn" type="button">Actualizar</button>
             </div>
@@ -254,6 +276,38 @@
                 <div id="recordsTable" class="table-wrap"></div>
               </section>
             </div>
+            <section id="editContributionPanel" class="panel edit-panel hidden" aria-labelledby="editContributionTitle">
+              <div class="page-heading compact">
+                <div>
+                  <h3 id="editContributionTitle">Editar aporte</h3>
+                  <p id="editContributionId" class="hint"></p>
+                </div>
+                <button id="cancelEditContributionBtn" type="button">Cerrar</button>
+              </div>
+              <audio id="editAudioPlayback" controls class="full-width hidden"></audio>
+              <form id="editContributionForm" class="form-grid columns">
+                <label>Direccion
+                  <select id="editTranslationDirection">
+                    <option value="gn-es">Guarani -> castellano</option>
+                    <option value="es-gn">Castellano -> guarani</option>
+                  </select>
+                </label>
+                <label>Estado
+                  <select id="editQualityStatus"></select>
+                </label>
+                <label class="span">Transcripcion
+                  <textarea id="editSourceText" rows="5"></textarea>
+                </label>
+                <label class="span">Traduccion
+                  <textarea id="editTargetText" rows="5"></textarea>
+                </label>
+                <label class="span">Notas de correccion
+                  <textarea id="editReviewNotes" rows="3"></textarea>
+                </label>
+                <button class="primary span" type="submit">Guardar correccion</button>
+                <div id="editContributionMessage" class="message span" role="status"></div>
+              </form>
+            </section>
           </section>
 
           <section id="tab-dashboard" class="tab-panel" aria-labelledby="dashboardTitle">
@@ -280,8 +334,8 @@
           <section id="tab-traductor" class="tab-panel" aria-labelledby="translatorTitle">
             <div class="page-heading">
               <div>
-                <h2 id="translatorTitle">Retroalimentacion del traductor</h2>
-                <p>Las evaluaciones y correcciones no entrenan automaticamente el modelo: entran a revision y solo luego alimentan el corpus paralelo.</p>
+                <h2 id="translatorTitle">Traducir texto</h2>
+                <p>Consulte una traduccion de texto y guarde una correccion humana cuando la respuesta necesite ajuste.</p>
               </div>
               <span id="modelVersionBadge" class="badge info">Modelo: no conectado</span>
             </div>
@@ -318,8 +372,8 @@
           <section id="tab-admin" class="tab-panel" aria-labelledby="adminTitle">
             <div class="page-heading">
               <div>
-                <h2 id="adminTitle">Administracion</h2>
-                <p>Gestion de textos, catalogos operativos y revision linguistica en modo demo local o backend configurado.</p>
+                <h2 id="adminTitle">Textos sugeridos</h2>
+                <p>Administre frases de referencia para lectura, practica o comparacion entre audio, transcripcion y traduccion.</p>
               </div>
             </div>
             <div class="panel-grid two">
@@ -345,8 +399,8 @@
           <section id="tab-exports" class="tab-panel" aria-labelledby="exportsTitle">
             <div class="page-heading">
               <div>
-                <h2 id="exportsTitle">Exportacion para corpus</h2>
-                <p>Separa corpus acustico, monolingue y paralelo; distingue datos crudos, validados y rechazados.</p>
+                <h2 id="exportsTitle">Exportar datos</h2>
+                <p>Genere archivos para audios, transcripciones, traducciones, participantes anonimizados y revision de calidad.</p>
               </div>
             </div>
             <div class="panel-grid two">
@@ -401,11 +455,11 @@
             </div>
             <div class="panel-grid two">
               <section class="panel">
-                <h3>Corpus separados</h3>
+                <h3>Flujo principal</h3>
                 <ul class="compact-list">
-                  <li>Corpus acustico: audio y texto leido en guarani.</li>
-                  <li>Corpus monolingue: textos normalizados en guarani.</li>
-                  <li>Corpus paralelo: pares guarani-espanol validados.</li>
+                  <li>Traducir audio: grabar o cargar audio, transcribir y traducir.</li>
+                  <li>Aportes: editar o corregir contribuciones ya guardadas.</li>
+                  <li>Exportar: descargar datos para revision, entrenamiento o respaldo.</li>
                 </ul>
               </section>
               <section class="panel">

@@ -86,6 +86,21 @@
 | app_version | texto | requerido |
 | device_type | texto | `movil` o `desktop` |
 | browser | texto | navegador |
+| prompt_text | texto | transcripcion usada para el aporte |
+| task_type | enum | `AUDIO_TRANSLATION` u otra tarea futura |
+| translation_direction | enum | `gn-es` o `es-gn` |
+| source_language | texto | idioma del audio/transcripcion |
+| target_language | texto | idioma de la traduccion |
+| source_text | texto | transcripcion exacta del audio |
+| translated_text | texto | traduccion o correccion humana |
+| approx_volume_peak | numero | volumen aproximado si esta disponible |
+| corpus_state | enum | estado del ciclo incremental |
+| created_by | texto | usuario que creo el aporte |
+| correction_count | numero | cantidad de correcciones locales |
+| corrected_by | texto | ultimo usuario corrector |
+| corrected_at | datetime | ISO 8601 |
+| sync_error | texto | ultimo error de sincronizacion si existe |
+| sync_error_at | datetime | ISO 8601 |
 
 ## ARCHIVOS
 

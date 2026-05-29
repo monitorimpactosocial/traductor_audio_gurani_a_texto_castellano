@@ -1,6 +1,6 @@
 window.UNC_CONFIG = {
   appName: "UNC Traductor Guarani",
-  appVersion: "0.1.0-piloto",
+  appVersion: "0.1.1-piloto",
   environment: "desarrollo",
   consentVersion: "CONS-UNC-GN-2026-05-29-v1",
   backendMode: "demo",
