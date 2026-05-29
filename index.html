@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0B5D3B" />
+    <title>UNC Traductor Guarani</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <noscript>Esta aplicacion necesita JavaScript para grabar audio, guardar datos locales y sincronizar registros.</noscript>
+
+    <section id="loginView" class="login-shell" aria-labelledby="loginTitle">
+      <div class="login-panel">
+        <div class="brand-mark" aria-hidden="true">UNC</div>
+        <h1 id="loginTitle">UNC Traductor Guarani</h1>
+        <p>Plataforma para recolectar, validar y versionar datos linguisticos guarani-espanol con trazabilidad institucional.</p>
+        <form id="loginForm" class="form-grid">
+          <label>
+            Usuario
+            <input id="loginUser" name="usuario" autocomplete="username" required />
+          </label>
+          <label>
+            Contrasena
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary full" type="submit">Iniciar sesion</button>
+          <p class="hint">Modo demo local: admin.demo / admin-demo, linguista.demo / linguista-demo, cargador.demo / cargador-demo.</p>
+          <div id="loginMessage" class="message" role="status"></div>
+        </form>
+      </div>
+    </section>
+
+    <div id="appShell" class="app-shell hidden">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark small" aria-hidden="true">UNC</div>
+          <div>
+            <strong>UNC Traductor Guarani</strong>
+            <span id="appVersionLabel">v0.1.0</span>
+          </div>
+        </div>
+        <div class="session-box">
+          <span id="onlineBadge" class="badge info">Verificando conexion</span>
+          <span id="currentUserLabel"></span>
+          <button id="logoutBtn" class="ghost" type="button">Salir</button>
+        </div>
+      </header>
+
+      <div class="layout">
+        <nav class="tabs" aria-label="Modulos principales">
+          <button class="tab active" data-tab="inicio" type="button">Inicio</button>
+          <button class="tab" data-tab="consentimiento" data-permission="capture" type="button">Consentimiento</button>
+          <button class="tab" data-tab="perfil" data-permission="capture" type="button">Perfil</button>
+          <button class="tab" data-tab="grabar" data-permission="capture" type="button">Grabar</button>
+          <button class="tab" data-tab="registros" data-permission="review" type="button">Registros</button>
+          <button class="tab" data-tab="dashboard" data-permission="dashboard" type="button">Dashboard</button>
+          <button class="tab" data-tab="traductor" data-permission="translate" type="button">Traductor</button>
+          <button class="tab" data-tab="admin" data-permission="admin" type="button">Admin</button>
+          <button class="tab" data-tab="exports" data-permission="exports" type="button">Exportar</button>
+          <button class="tab" data-tab="sync" type="button">Sync</button>
+          <button class="tab" data-tab="ayuda" type="button">Ayuda</button>
+        </nav>
+
+        <main class="content">
+          <section id="tab-inicio" class="tab-panel active" aria-labelledby="inicioTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="inicioTitle">Inicio</h2>
+                <p>Recolecta audios, textos, traducciones y correcciones validadas para construir corpus auditables y mejorar progresivamente modelos UNC.</p>
+              </div>
+              <button class="primary" data-jump="grabar" type="button">Nueva grabacion</button>
+            </div>
+            <div class="kpi-grid">
+              <article class="kpi-card"><span>Grabaciones</span><strong id="kpiRecordings">0</strong></article>
+              <article class="kpi-card"><span>Pendientes sync</span><strong id="kpiPending">0</strong></article>
+              <article class="kpi-card"><span>Participantes</span><strong id="kpiParticipants">0</strong></article>
+              <article class="kpi-card"><span>Prompts activos</span><strong id="kpiPrompts">0</strong></article>
+            </div>
+            <div class="panel-grid two">
+              <section class="panel">
+                <h3>Estado operativo</h3>
+                <dl class="meta-list">
+                  <div><dt>Usuario conectado</dt><dd id="homeUser">-</dd></div>
+                  <div><dt>Rol</dt><dd id="homeRole">-</dd></div>
+                  <div><dt>Ultima sincronizacion</dt><dd id="lastSyncAt">Sin sincronizar</dd></div>
+                  <div><dt>Version de consentimiento</dt><dd id="consentVersionLabel">-</dd></div>
+                  <div><dt>Backend</dt><dd id="backendModeLabel">Demo local</dd></div>
+                </dl>
+              </section>
+              <section class="panel">
+                <h3>Accesos rapidos</h3>
+                <div class="quick-actions">
+                  <button data-jump="consentimiento" type="button">Consentimiento</button>
+                  <button data-jump="perfil" type="button">Perfil linguistico</button>
+                  <button data-jump="sync" type="button">Sincronizar</button>
+                  <button data-jump="ayuda" type="button">Ayuda</button>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section id="tab-consentimiento" class="tab-panel" aria-labelledby="consentTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="consentTitle">Consentimiento informado</h2>
+                <p>Antes de grabar, el participante debe aceptar el uso de su voz y datos linguisticos bajo reglas claras.</p>
+              </div>
+              <span id="consentStatusBadge" class="badge warning">Pendiente</span>
+            </div>
+            <form id="consentForm" class="panel form-grid">
+              <div class="notice">
+                Se grabara la voz del participante leyendo textos en guarani. Los audios y metadatos podran utilizarse para investigacion, desarrollo linguistico, reconocimiento de voz, evaluacion de pronunciacion y entrenamiento futuro de modelos, siempre con revision y gobernanza institucional.
+              </div>
+              <label>
+                Alias o seudonimo
+                <input id="consentAlias" name="alias" placeholder="Opcional" />
+              </label>
+              <label class="check-row">
+                <input id="anonymousMode" type="checkbox" />
+                Participacion anonima o seudonima
+              </label>
+              <label class="check-row">
+                <input id="consentAccepted" type="checkbox" required />
+                Acepto participar y autorizo la grabacion de voz bajo la version vigente del consentimiento.
+              </label>
+              <button class="primary" type="submit">Registrar consentimiento</button>
+              <div id="consentMessage" class="message" role="status"></div>
+            </form>
+          </section>
+
+          <section id="tab-perfil" class="tab-panel" aria-labelledby="profileTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="profileTitle">Perfil linguistico minimo</h2>
+                <p>El perfil evita recolectar datos personales directos y permite analizar cobertura por edad, territorio, variante y dominio del idioma.</p>
+              </div>
+              <span id="participantIdBadge" class="badge">Sin perfil</span>
+            </div>
+            <form id="profileForm" class="panel form-grid columns">
+              <label>Rango de edad
+                <select id="ageRange" required>
+                  <option value="">Seleccionar</option>
+                  <option>12-17</option><option>18-29</option><option>30-44</option><option>45-59</option><option>60+</option><option>No declara</option>
+                </select>
+              </label>
+              <label>Departamento
+                <input id="department" placeholder="Concepcion, San Pedro..." />
+              </label>
+              <label>Distrito
+                <input id="district" />
+              </label>
+              <label>Comunidad
+                <input id="community" />
+              </label>
+              <label>Lengua materna
+                <select id="nativeLanguage" required>
+                  <option value="">Seleccionar</option>
+                  <option>Guarani</option><option>Espanol</option><option>Guarani y espanol</option><option>Otra</option><option>No declara</option>
+                </select>
+              </label>
+              <label>Nivel de guarani
+                <select id="guaraniLevel" required>
+                  <option value="">Seleccionar</option>
+                  <option>Basico</option><option>Intermedio</option><option>Avanzado</option><option>Nativo</option><option>No declara</option>
+                </select>
+              </label>
+              <label>Variante guarani
+                <input id="guaraniVariant" placeholder="Si corresponde" />
+              </label>
+              <label>Otros idiomas
+                <input id="otherLanguages" placeholder="Separar por coma" />
+              </label>
+              <button class="primary span" type="submit">Guardar perfil</button>
+              <div id="profileMessage" class="message span" role="status"></div>
+            </form>
+          </section>
+
+          <section id="tab-grabar" class="tab-panel" aria-labelledby="recordTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="recordTitle">Lectura guiada y grabacion</h2>
+                <p>Los textos se seleccionan priorizando baja cobertura para mejorar el valor de cada nueva muestra del corpus acustico.</p>
+              </div>
+              <button id="nextPromptBtn" type="button">Siguiente texto</button>
+            </div>
+            <section class="prompt-panel">
+              <div class="prompt-meta">
+                <span id="promptIdLabel">prompt_id: -</span>
+                <span id="promptTopicLabel">tema: -</span>
+                <span id="promptDifficultyLabel">nivel: -</span>
+              </div>
+              <p id="promptText" class="prompt-text">Cargando texto...</p>
+              <details>
+                <summary>Traduccion y fuente</summary>
+                <p id="promptSpanish">Sin traduccion disponible.</p>
+                <p id="promptSource" class="hint"></p>
+              </details>
+            </section>
+            <section class="panel recorder">
+              <div class="rec-status">
+                <span id="recordState" class="badge">Listo</span>
+                <strong id="recordTimer">00:00</strong>
+                <span id="recordQualityHint" class="hint">Duracion valida: 1.2 a 90 segundos.</span>
+              </div>
+              <div class="rec-controls">
+                <button id="startRecordBtn" class="primary" type="button">Grabar</button>
+                <button id="pauseRecordBtn" type="button" disabled>Pausar</button>
+                <button id="stopRecordBtn" type="button" disabled>Detener</button>
+                <button id="discardRecordBtn" class="danger" type="button" disabled>Descartar</button>
+              </div>
+              <audio id="audioPlayback" controls class="full-width hidden"></audio>
+              <label>Notas de campo
+                <textarea id="fieldNotes" rows="3" placeholder="Ruido, interrupciones, variante, observaciones breves..."></textarea>
+              </label>
+              <div class="rec-controls">
+                <button id="saveLocalBtn" class="primary" type="button" disabled>Guardar en cola</button>
+                <button id="syncNowBtn" type="button">Sincronizar ahora</button>
+              </div>
+              <div id="recordMessage" class="message" role="status"></div>
+            </section>
+          </section>
+
+          <section id="tab-registros" class="tab-panel" aria-labelledby="recordsTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="recordsTitle">Registros</h2>
+                <p>Revision de metadatos, estado de sincronizacion y calidad de audio.</p>
+              </div>
+              <button id="refreshRecordsBtn" type="button">Actualizar</button>
+            </div>
+            <div class="workbench">
+              <aside class="filters panel">
+                <h3>Filtros</h3>
+                <label>Estado calidad
+                  <select id="filterQuality"><option value="">Todos</option></select>
+                </label>
+                <label>Sincronizacion
+                  <select id="filterSync">
+                    <option value="">Todos</option>
+                    <option>PENDIENTE</option>
+                    <option>SINCRONIZADO</option>
+                    <option>ERROR_SYNC</option>
+                    <option>LOCAL_DEMO</option>
+                  </select>
+                </label>
+                <label>Buscar texto
+                  <input id="filterSearch" />
+                </label>
+              </aside>
+              <section class="panel table-panel">
+                <div id="recordsTable" class="table-wrap"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="tab-dashboard" class="tab-panel" aria-labelledby="dashboardTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="dashboardTitle">Dashboard</h2>
+                <p>Indicadores funcionales para cobertura, calidad, sincronizacion y evolucion temporal.</p>
+              </div>
+              <button id="refreshDashboardBtn" type="button">Recalcular</button>
+            </div>
+            <div class="kpi-grid">
+              <article class="kpi-card"><span>Textos cubiertos</span><strong id="dashCovered">0</strong></article>
+              <article class="kpi-card"><span>Pendiente revision</span><strong id="dashPendingReview">0</strong></article>
+              <article class="kpi-card"><span>Aprobadas</span><strong id="dashApproved">0</strong></article>
+              <article class="kpi-card"><span>Duracion total</span><strong id="dashDuration">0m</strong></article>
+            </div>
+            <div class="panel-grid two">
+              <section class="panel"><h3>Cobertura por tema</h3><div id="topicChart" class="bar-chart"></div></section>
+              <section class="panel"><h3>Estados de calidad</h3><div id="qualityChart" class="bar-chart"></div></section>
+            </div>
+            <section class="panel"><h3>Cobertura por texto</h3><div id="promptCoverageChart" class="bar-chart dense"></div></section>
+          </section>
+
+          <section id="tab-traductor" class="tab-panel" aria-labelledby="translatorTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="translatorTitle">Retroalimentacion del traductor</h2>
+                <p>Las evaluaciones y correcciones no entrenan automaticamente el modelo: entran a revision y solo luego alimentan el corpus paralelo.</p>
+              </div>
+              <span id="modelVersionBadge" class="badge info">Modelo: no conectado</span>
+            </div>
+            <form id="translatorForm" class="panel form-grid">
+              <label>Direccion
+                <select id="translationDirection">
+                  <option value="gn-es">Guarani a espanol</option>
+                  <option value="es-gn">Espanol a guarani</option>
+                </select>
+              </label>
+              <label>Texto original
+                <textarea id="translationInput" rows="4" required></textarea>
+              </label>
+              <button class="primary" type="submit">Consultar traductor</button>
+              <label>Traduccion generada
+                <textarea id="translationOutput" rows="4" readonly></textarea>
+              </label>
+              <label>Correccion humana
+                <textarea id="translationCorrection" rows="4" placeholder="Completar si la traduccion requiere correccion"></textarea>
+              </label>
+              <label>Evaluacion
+                <select id="translationRating">
+                  <option value="">Seleccionar</option>
+                  <option value="CORRECTA">Correcta</option>
+                  <option value="PARCIAL">Parcial</option>
+                  <option value="INCORRECTA">Incorrecta</option>
+                </select>
+              </label>
+              <button id="saveFeedbackBtn" type="button">Guardar evaluacion</button>
+              <div id="translatorMessage" class="message" role="status"></div>
+            </form>
+          </section>
+
+          <section id="tab-admin" class="tab-panel" aria-labelledby="adminTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="adminTitle">Administracion</h2>
+                <p>Gestion de textos, catalogos operativos y revision linguistica en modo demo local o backend configurado.</p>
+              </div>
+            </div>
+            <div class="panel-grid two">
+              <section class="panel">
+                <h3>Nuevo texto de lectura</h3>
+                <form id="promptForm" class="form-grid">
+                  <label>Texto guarani<textarea id="adminPromptText" rows="4" required></textarea></label>
+                  <label>Texto normalizado<textarea id="adminPromptNormalized" rows="3"></textarea></label>
+                  <label>Traduccion espanol<textarea id="adminPromptSpanish" rows="3"></textarea></label>
+                  <label>Tema<input id="adminPromptTopic" /></label>
+                  <label>Nivel<select id="adminPromptDifficulty"><option>basico</option><option>intermedio</option><option>avanzado</option></select></label>
+                  <label>Fuente<input id="adminPromptSource" /></label>
+                  <button class="primary" type="submit">Guardar texto</button>
+                </form>
+              </section>
+              <section class="panel">
+                <h3>Textos disponibles</h3>
+                <div id="adminPromptsTable" class="table-wrap"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="tab-exports" class="tab-panel" aria-labelledby="exportsTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="exportsTitle">Exportacion para corpus</h2>
+                <p>Separa corpus acustico, monolingue y paralelo; distingue datos crudos, validados y rechazados.</p>
+              </div>
+            </div>
+            <div class="panel-grid two">
+              <section class="panel">
+                <h3>Archivos locales</h3>
+                <div class="quick-actions">
+                  <button data-export="metadata_recordings.csv" type="button">metadata_recordings.csv</button>
+                  <button data-export="participants_anonymized.csv" type="button">participants_anonymized.csv</button>
+                  <button data-export="prompts.csv" type="button">prompts.csv</button>
+                  <button data-export="manifest_asr.jsonl" type="button">manifest_asr.jsonl</button>
+                  <button data-export="parallel_guarani_spanish.csv" type="button">parallel_guarani_spanish.csv</button>
+                  <button data-export="quality_review.csv" type="button">quality_review.csv</button>
+                </div>
+              </section>
+              <section class="panel">
+                <h3>Ciclo incremental</h3>
+                <ol class="compact-list">
+                  <li>Dato recibido y validacion automatica.</li>
+                  <li>Revision humana por rol autorizado.</li>
+                  <li>Ingreso al corpus institucional versionado.</li>
+                  <li>Entrenamiento por lotes y evaluacion.</li>
+                  <li>Publicacion solo si supera metricas minimas.</li>
+                </ol>
+              </section>
+            </div>
+          </section>
+
+          <section id="tab-sync" class="tab-panel" aria-labelledby="syncTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="syncTitle">Sincronizacion offline</h2>
+                <p>Los datos locales no se borran hasta confirmar guardado remoto de audio y metadatos.</p>
+              </div>
+              <button id="manualSyncBtn" class="primary" type="button">Sincronizar pendientes</button>
+            </div>
+            <section class="panel">
+              <dl class="meta-list">
+                <div><dt>Registros pendientes</dt><dd id="syncPendingCount">0</dd></div>
+                <div><dt>Errores de sync</dt><dd id="syncErrorCount">0</dd></div>
+                <div><dt>Ultimo intento</dt><dd id="syncLastAttempt">Sin intentos</dd></div>
+              </dl>
+              <div id="syncLog" class="event-log"></div>
+            </section>
+          </section>
+
+          <section id="tab-ayuda" class="tab-panel" aria-labelledby="helpTitle">
+            <div class="page-heading">
+              <div>
+                <h2 id="helpTitle">Ayuda</h2>
+                <p>Version piloto auditable. Para produccion, configurar Google Apps Script, Google Sheets, Drive o API UNC institucional.</p>
+              </div>
+            </div>
+            <div class="panel-grid two">
+              <section class="panel">
+                <h3>Corpus separados</h3>
+                <ul class="compact-list">
+                  <li>Corpus acustico: audio y texto leido en guarani.</li>
+                  <li>Corpus monolingue: textos normalizados en guarani.</li>
+                  <li>Corpus paralelo: pares guarani-espanol validados.</li>
+                </ul>
+              </section>
+              <section class="panel">
+                <h3>Documentacion</h3>
+                <ul class="compact-list">
+                  <li><a href="docs/manual_usuario.md">Manual de usuario</a></li>
+                  <li><a href="docs/manual_tecnico.md">Manual tecnico</a></li>
+                  <li><a href="docs/diccionario_datos.md">Diccionario de datos</a></li>
+                  <li><a href="docs/consentimiento.md">Consentimiento</a></li>
+                  <li><a href="docs/guia_validacion_linguistica.md">Guia de validacion</a></li>
+                </ul>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

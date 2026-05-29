@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180" role="img" aria-labelledby="title desc">
+  <title id="title">UNC Traductor Guarani</title>
+  <desc id="desc">Logotipo textual de la plataforma.</desc>
+  <rect width="720" height="180" rx="16" fill="#FFFFFF"/>
+  <rect x="24" y="24" width="132" height="132" rx="22" fill="#0B5D3B"/>
+  <text x="90" y="103" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#FFFFFF">UNC</text>
+  <text x="184" y="78" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#073B28">Traductor Guarani</text>
+  <text x="184" y="122" font-family="Arial, sans-serif" font-size="22" fill="#334155">Corpus oral, textual y paralelo auditable</text>
+  <path d="M520 114c28-42 56-42 84 0s56 42 84 0" fill="none" stroke="#C8A24A" stroke-width="16" stroke-linecap="round"/>
+</svg>

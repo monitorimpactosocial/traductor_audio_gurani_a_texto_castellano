@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+data.db
+dataset.jsonl
+recordings/
+.DS_Store
+*.log
+*.gsheet
+*.code-workspace
+Manual maestro para creaci*n de appweb.txt

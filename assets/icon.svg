@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Icono UNC Traductor Guarani</title>
+  <desc id="desc">Marca institucional verde con ondas de audio y texto.</desc>
+  <rect width="512" height="512" rx="80" fill="#0B5D3B"/>
+  <rect x="64" y="76" width="384" height="360" rx="42" fill="#E8F3EE"/>
+  <path d="M128 306c46-72 92-72 138 0s92 72 138 0" fill="none" stroke="#0B5D3B" stroke-width="34" stroke-linecap="round"/>
+  <path d="M144 194h224M144 244h180" fill="none" stroke="#073B28" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="382" cy="244" r="24" fill="#C8A24A"/>
+</svg>

@@ -1,0 +1,35 @@
+{
+  "app_version": "0.1.0-piloto",
+  "environment": "desarrollo",
+  "consent_version": "CONS-UNC-GN-2026-05-29-v1",
+  "sheets": [
+    "CONFIG",
+    "USUARIOS",
+    "PARTICIPANTES",
+    "PROMPTS",
+    "RECORDINGS",
+    "ARCHIVOS",
+    "LOG",
+    "ERRORES",
+    "VERSIONES",
+    "EXPORTS"
+  ],
+  "audio_storage": {
+    "raw": "audio/raw/",
+    "validated": "audio/validated/",
+    "rejected": "audio/rejected/"
+  },
+  "export_files": [
+    "metadata_recordings.csv",
+    "participants_anonymized.csv",
+    "prompts.csv",
+    "manifest_asr.jsonl",
+    "parallel_guarani_spanish.csv",
+    "quality_review.csv"
+  ],
+  "corpus_types": {
+    "acustico": "audio + texto guarani leido",
+    "monolingue": "texto guarani normalizado",
+    "paralelo": "pares guarani-espanol validados"
+  }
+}
